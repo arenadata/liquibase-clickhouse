@@ -59,13 +59,22 @@ public class CreateDatabaseChangeLogLockTableClickHouse
                 + "("
                 + "ID Int64,"
                 + "LOCKED UInt8,"
-                + "LOCKGRANTED Nullable(DateTime64),"
+                + "LOCKGRANTED DateTime64(3),"
                 + "LOCKEDBY Nullable(String)) "
-                + SqlGeneratorUtil.generateSqlEngineClause(
-                    properties, tableName.toLowerCase(Locale.ROOT)),
+                + generateSqlEngineClause(properties, tableName.toLowerCase(Locale.ROOT)),
             database.getDefaultSchemaName(),
             tableName);
 
     return SqlGeneratorUtil.generateSql(database, createTableQuery);
   }
+
+  public String generateSqlEngineClause(ClusterConfig properties, String tableName) {
+    if (properties != null)
+      return String.format(
+              "ENGINE ReplicatedReplacingMergeTree('%s','%s', LOCKGRANTED) ORDER BY ID",
+              properties.getTableZooKeeperPathPrefix() + tableName.toLowerCase(Locale.ROOT),
+              properties.getTableReplicaName());
+    else return "ENGINE ReplacingMergeTree(LOCKGRANTED) ORDER BY ID";
+  }
+
 }

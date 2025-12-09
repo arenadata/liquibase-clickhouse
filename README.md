@@ -9,7 +9,7 @@ Maven dependency:
 
 ```
 <dependency>
-    <groupId>com.mediarithmics</groupId>
+    <groupId>io.arenadata</groupId>
     <artifactId>liquibase-clickhouse</artifactId>
     <version>Latest version from Maven Central</version>
 </dependency>
@@ -30,6 +30,8 @@ Your updates should also affect the entire cluster either by using ON CLUSTER cl
 <hr/>
 
 ###### Important changes
+From the version 0.8.0 the extension adapted for the clickhouse-jdbc v0.9.4 and liquibase v4.33.0.
+
 From the version 0.7.0 the liquibase-clickhouse supports replication on a cluster. Liquibase v4.6.1.
 
 From the version 0.6.0 the extension adapted for the liquibase v4.3.5.
