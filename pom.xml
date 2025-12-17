@@ -5,7 +5,7 @@
 
     <groupId>io.arenadata</groupId>
     <artifactId>liquibase-clickhouse</artifactId>
-    <version>0.8.0-arenadata-SNAPSHOT</version>
+    <version>0.8.0-arenadata</version>
     <packaging>jar</packaging>
 
     <name>Liquibase extension for ClickHouse</name>
