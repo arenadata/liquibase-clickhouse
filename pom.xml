@@ -5,7 +5,7 @@
 
     <groupId>io.arenadata</groupId>
     <artifactId>liquibase-clickhouse</artifactId>
-    <version>0.7.5-arenadata-SNAPSHOT</version>
+    <version>0.8.0-arenadata-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Liquibase extension for ClickHouse</name>
@@ -38,8 +38,8 @@
     <properties>
         <encoding>UTF-8</encoding>
         <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
-        <clickhouse-jdbc.version>0.5.0</clickhouse-jdbc.version>
-        <liquibase.version>4.15.0</liquibase.version>
+        <clickhouse-jdbc.version>0.9.4</clickhouse-jdbc.version>
+        <liquibase.version>4.33.0</liquibase.version>
         <junit.version>5.4.0</junit.version>
         <test-containers.version>1.17.3</test-containers.version>
         <snakeyaml.version>2.0</snakeyaml.version>

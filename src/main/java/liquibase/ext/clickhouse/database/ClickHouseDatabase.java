@@ -54,6 +54,15 @@ public class ClickHouseDatabase extends AbstractJdbcDatabase {
     return DATABASE_NAME;
   }
 
+  /*
+   * Postfix _V1 is added to provide seamless migration from previous version of clickhouse extension
+   * where DatabaseChangeLogLock table engine is not as required by clickhouse driver v2.
+   */
+  @Override
+  public String getDatabaseChangeLogLockTableName() {
+    return super.getDatabaseChangeLogLockTableName() + "_V1";
+  }
+
   @Override
   public boolean isCorrectDatabaseImplementation(DatabaseConnection conn) throws DatabaseException {
     return DATABASE_NAME.equals(conn.getDatabaseProductName());

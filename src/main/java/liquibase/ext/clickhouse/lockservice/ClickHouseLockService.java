@@ -52,7 +52,7 @@ public class ClickHouseLockService extends StandardLockService {
       try {
         String query =
             String.format(
-                "SELECT COUNT(*) FROM `%s`.%s",
+                "SELECT COUNT(*) FROM `%s`.%s FINAL",
                 database.getDefaultSchemaName(), database.getDatabaseChangeLogLockTableName());
         int nbRows = getExecutor().queryForInt(new RawSqlStatement(query));
         isLockTableInitialized = nbRows > 0;
@@ -65,24 +65,6 @@ public class ClickHouseLockService extends StandardLockService {
       }
     }
     return isLockTableInitialized;
-  }
-
-  @Override
-  public boolean hasDatabaseChangeLogLockTable() {
-    boolean hasTable = false;
-    try {
-      String query =
-          String.format(
-              "SELECT ID FROM `%s`.%s LIMIT 1",
-              database.getDefaultSchemaName(), database.getDatabaseChangeLogLockTableName());
-      getExecutor().execute(new RawSqlStatement(query));
-      hasTable = true;
-    } catch (DatabaseException e) {
-      getLogger()
-          .info(
-              String.format("No %s table available", database.getDatabaseChangeLogLockTableName()));
-    }
-    return hasTable;
   }
 
   private Executor getExecutor() {
