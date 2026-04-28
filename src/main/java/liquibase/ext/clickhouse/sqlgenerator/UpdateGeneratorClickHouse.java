@@ -12,6 +12,8 @@ import liquibase.statement.DatabaseFunction;
 import liquibase.statement.core.UpdateStatement;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static liquibase.util.SqlUtil.replacePredicatePlaceholders;
 
@@ -33,67 +35,69 @@ public class UpdateGeneratorClickHouse extends UpdateGenerator {
                              SqlGeneratorChain sqlGeneratorChain) {
         ClusterConfig properties = ParamsLoader.getLiquibaseClickhouseProperties();
 
-        StringBuilder sb = new StringBuilder(
-                String.format(
-                        "ALTER TABLE `%s`.`%s` " + SqlGeneratorUtil.generateSqlOnClusterClause(properties),
-                        database.getDefaultSchemaName(),
-                        database.getDatabaseChangeLogTableName()
-                )
-        );
-
+        StringBuilder sb = new StringBuilder("ALTER TABLE ");
+        sb.append(generateSource(database, properties));
         sb.append("UPDATE ");
-        for (String column : statement.getNewColumnValues().keySet()) {
-            sb.append(" ")
-                    .append(column)
-                    .append(" = ")
-                    .append(convertToString(statement.getNewColumnValues().get(column), database))
-                    .append(",");
-        }
-        int lastComma = sb.lastIndexOf(",");
-        if (lastComma >= 0) {
-            sb.deleteCharAt(lastComma);
-        }
+        sb.append(generateColumnValues(statement.getNewColumnValues(), database));
+        sb.append(generateWhereClause(statement, database));
+        return SqlGeneratorUtil.generateSql(database, sb.toString());
+    }
+
+    private String generateSource(Database database, ClusterConfig properties) {
+        return "`" + database.getDefaultSchemaName() + "`.`"
+                + database.getDatabaseChangeLogTableName() + "` "
+                + SqlGeneratorUtil.generateSqlOnClusterClause(properties);
+    }
+
+    private String generateColumnValues(Map<String, Object> columnValues, Database database) {
+        return columnValues.entrySet().stream()
+                .map(entry -> entry.getKey() + " = " + convertToString(entry.getValue(), database))
+                .collect(Collectors.joining(", "));
+    }
+
+    private String generateWhereClause(UpdateStatement statement, Database database) {
+        StringBuilder sb = new StringBuilder();
         if (statement.getWhereClause() != null) {
-            sb.append(" WHERE ")
-                    .append(
-                            replacePredicatePlaceholders(
-                                    database,
-                                    statement.getWhereClause(),
-                                    statement.getWhereColumnNames(),
-                                    statement.getWhereParameters()));
+            sb.append(" WHERE ");
+            sb.append(
+                    replacePredicatePlaceholders(
+                            database,
+                            statement.getWhereClause(),
+                            statement.getWhereColumnNames(),
+                            statement.getWhereParameters()));
         } else {
             sb.append(" WHERE true ");
         }
         sb.append("SETTINGS mutations_sync = 1");
-
-        return SqlGeneratorUtil.generateSql(database, sb.toString());
+        return sb.toString();
     }
 
     private String convertToString(Object newValue, Database database) {
-        String sqlString;
         if ((newValue == null) || "NULL".equalsIgnoreCase(newValue.toString())) {
-            sqlString = "NULL";
-        } else if ((newValue instanceof String)
+            return "NULL";
+        }
+        if ((newValue instanceof String)
                 && !looksLikeFunctionCall(((String) newValue), database)) {
-            sqlString = DataTypeFactory.getInstance().fromObject(newValue, database).objectToSql(newValue, database);
-        } else if (newValue instanceof Date) {
+            return DataTypeFactory.getInstance().fromObject(newValue, database).objectToSql(newValue, database);
+        }
+        if (newValue instanceof Date) {
             // converting java.util.Date to java.sql.Date
             Date date = (Date) newValue;
             if (date.getClass().equals(Date.class)) {
                 date = new java.sql.Date(date.getTime());
             }
-            sqlString = database.getDateLiteral(date);
-        } else if (newValue instanceof Boolean) {
-            if (((Boolean) newValue)) {
-                sqlString = DataTypeFactory.getInstance().getTrueBooleanValue(database);
-            } else {
-                sqlString = DataTypeFactory.getInstance().getFalseBooleanValue(database);
-            }
-        } else if (newValue instanceof DatabaseFunction) {
-            sqlString = database.generateDatabaseFunctionValue((DatabaseFunction) newValue);
-        } else {
-            sqlString = newValue.toString();
+            return database.getDateLiteral(date);
         }
-        return sqlString;
+        if (newValue instanceof Boolean) {
+            if (((Boolean) newValue)) {
+                return DataTypeFactory.getInstance().getTrueBooleanValue(database);
+            } else {
+                return DataTypeFactory.getInstance().getFalseBooleanValue(database);
+            }
+        }
+        if (newValue instanceof DatabaseFunction) {
+            return database.generateDatabaseFunctionValue((DatabaseFunction) newValue);
+        }
+        return newValue.toString();
     }
 }
