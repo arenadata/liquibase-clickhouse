@@ -21,6 +21,8 @@ package liquibase.ext.clickhouse.params;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -32,7 +34,7 @@ import liquibase.logging.Logger;
 public class ParamsLoader {
   private static final Logger LOG = Scope.getCurrentScope().getLog(ParamsLoader.class);
 
-  private static ClusterConfig liquibaseClickhouseProperties = null;
+  private static ConcurrentMap<String, ClusterConfig> liquibaseClickhouseProperties = new ConcurrentHashMap<>(8);
 
   private static Set<String> validProperties =
       new HashSet<>(Arrays.asList("clusterName", "tableZooKeeperPathPrefix", "tableReplicaName"));
@@ -82,14 +84,19 @@ public class ParamsLoader {
   }
 
   public static ClusterConfig getLiquibaseClickhouseProperties(String configFile) {
-    if (liquibaseClickhouseProperties != null) return liquibaseClickhouseProperties;
+    return liquibaseClickhouseProperties.computeIfAbsent(configFile, ParamsLoader::createLiquibaseClickhouseProperties);
+  }
 
-    Config conf = ConfigFactory.load(configFile);
+  private static ClusterConfig createLiquibaseClickhouseProperties(String configFile) {
+    Config customConfig = ConfigFactory.load(configFile);
+    Config finalConfig = ConfigFactory.systemProperties()
+            .withFallback(customConfig)
+            .resolve();
     Map<String, String> params = new HashMap<>();
     ClusterConfig result = null;
 
     try {
-      for (Map.Entry<String, ConfigValue> s : conf.getConfig("cluster").entrySet())
+      for (Map.Entry<String, ConfigValue> s : finalConfig.getConfig("cluster").entrySet())
         params.put(s.getKey(), s.getValue().unwrapped().toString());
 
       checkProperties(params);
