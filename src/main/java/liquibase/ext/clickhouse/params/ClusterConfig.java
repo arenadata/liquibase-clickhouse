@@ -19,6 +19,8 @@
  */
 package liquibase.ext.clickhouse.params;
 
+import java.util.Locale;
+
 public class ClusterConfig {
   private String clusterName;
   private String tableZooKeeperPathPrefix;
@@ -55,5 +57,9 @@ public class ClusterConfig {
 
   public void setTableReplicaName(String tableReplicaName) {
     this.tableReplicaName = tableReplicaName;
+  }
+
+  public String getTableZooKeeperPath(String databaseName, String tableName) {
+    return tableZooKeeperPathPrefix + databaseName + "/" + tableName.toLowerCase(Locale.ROOT);
   }
 }
