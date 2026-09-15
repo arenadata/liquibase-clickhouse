@@ -19,8 +19,6 @@
  */
 package liquibase.ext.clickhouse.sqlgenerator;
 
-import java.util.Locale;
-
 import liquibase.ext.clickhouse.database.ClickHouseDatabase;
 import liquibase.ext.clickhouse.params.ClusterConfig;
 import liquibase.ext.clickhouse.params.ParamsLoader;
@@ -70,8 +68,7 @@ public class CreateDatabaseChangeLogTableClickHouse extends CreateDatabaseChange
                 + "CONTEXTS Nullable(String),"
                 + "LABELS Nullable(String),"
                 + "DEPLOYMENT_ID Nullable(String)) "
-                + SqlGeneratorUtil.generateSqlEngineClause(
-                    properties, tableName.toLowerCase(Locale.ROOT)),
+                + SqlGeneratorUtil.generateSqlEngineClause(properties, database.getLiquibaseSchemaName(), tableName),
             database.getDefaultSchemaName(),
             tableName);
 

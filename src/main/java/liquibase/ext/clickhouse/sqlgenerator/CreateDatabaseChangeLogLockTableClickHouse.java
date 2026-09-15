@@ -19,8 +19,6 @@
  */
 package liquibase.ext.clickhouse.sqlgenerator;
 
-import java.util.*;
-
 import liquibase.ext.clickhouse.database.ClickHouseDatabase;
 import liquibase.ext.clickhouse.params.ClusterConfig;
 import liquibase.ext.clickhouse.params.ParamsLoader;
@@ -61,18 +59,18 @@ public class CreateDatabaseChangeLogLockTableClickHouse
                 + "LOCKED UInt8,"
                 + "LOCKGRANTED DateTime64(3),"
                 + "LOCKEDBY Nullable(String)) "
-                + generateSqlEngineClause(properties, tableName.toLowerCase(Locale.ROOT)),
+                + generateSqlEngineClause(properties, database.getLiquibaseSchemaName(), tableName),
             database.getDefaultSchemaName(),
             tableName);
 
     return SqlGeneratorUtil.generateSql(database, createTableQuery);
   }
 
-  public String generateSqlEngineClause(ClusterConfig properties, String tableName) {
+  public String generateSqlEngineClause(ClusterConfig properties, String databaseName, String tableName) {
     if (properties != null)
       return String.format(
               "ENGINE ReplicatedReplacingMergeTree('%s','%s', LOCKGRANTED) ORDER BY ID",
-              properties.getTableZooKeeperPathPrefix() + tableName.toLowerCase(Locale.ROOT),
+              properties.getTableZooKeeperPath(databaseName, tableName),
               properties.getTableReplicaName());
     else return "ENGINE ReplacingMergeTree(LOCKGRANTED) ORDER BY ID";
   }
